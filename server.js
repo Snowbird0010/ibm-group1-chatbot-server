@@ -1,25 +1,36 @@
 const express = require("express");
 const multer = require("multer");
 const cors = require("cors");
+const pdfParse = require("pdf-parse");
 
 const app = express();
-const upload = multer({ dest: "uploads/" });
+const upload = multer();
 
 app.use(cors());
 
-// POST /upload (this is the endpoint your chatbot calls)
-app.post("/upload", upload.single("uploaded_file"), (req, res) => {
+// POST /upload
+app.post("/upload", upload.single("uploaded_file"), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ msg: "No file uploaded" });
   }
 
   console.log("Received file:", req.file.originalname);
 
-  return res.json({
-    msg: `Your file '${req.file.originalname}' was uploaded successfully!`
-  });
+  try {
+    const pdfData = await pdfParse(req.file.buffer);
+
+    return res.json({
+      msg: `File '${req.file.originalname}' uploaded successfully`,
+      text: pdfData.text  // 🔥 Watson Assistant needs this text
+    });
+
+  } catch (err) {
+    console.error("PDF parse error:", err);
+    return res.status(500).json({ msg: "Error reading PDF file" });
+  }
 });
 
+// Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("Server running on port", PORT);
