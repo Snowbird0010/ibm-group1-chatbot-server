@@ -1,7 +1,6 @@
 const express = require("express");
 const multer = require("multer");
 const cors = require("cors");
-const pdfParse = require("pdf-parse");
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
